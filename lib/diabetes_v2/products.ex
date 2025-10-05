@@ -8,5 +8,6 @@ defmodule DiabetesV2.Products do
     resource(DiabetesV2.Products.ProductCategory)
     resource(DiabetesV2.Products.Product)
     resource(DiabetesV2.Products.ProductAlias)
+    resource(DiabetesV2.Products.Ingredient)
   end
 end
