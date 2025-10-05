@@ -64,3 +64,10 @@ config :phoenix, :json_library, Jason
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+# added to correct compile warnings about foreign key types
+#
+config :ash, :compatible_foreign_key_types,
+  [
+    {Ash.Type.Integer, Ash.Type.UUID}
+  ]
