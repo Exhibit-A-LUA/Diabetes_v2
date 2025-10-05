@@ -29,14 +29,10 @@ defmodule DiabetesV2.Products.Ingredient do
   relationships do
     belongs_to :product, DiabetesV2.Products.Product do
       allow_nil?(false)
-      source_attribute(:product_id)     # FK column in this table
-      destination_attribute(:id)         # the PK of the related table
     end
 
     belongs_to :ingredient_product, DiabetesV2.Products.Product do
       allow_nil?(false)
-      source_attribute(:ingredient_product_id)     # FK column in this table
-      destination_attribute(:id)         # the PK of the related table
     end
   end
 

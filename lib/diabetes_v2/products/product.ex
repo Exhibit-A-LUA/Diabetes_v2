@@ -51,30 +51,20 @@ defmodule DiabetesV2.Products.Product do
 
   relationships do
     belongs_to :main_type, DiabetesV2.Products.ProductMainType do
-      source_attribute(:main_type_id)    # FK column in this table
-      destination_attribute(:id)         # PK in related table
       allow_nil?(false)
-      validate_destination_attribute?(true)
     end
 
     belongs_to :sub_type, DiabetesV2.Products.ProductSubType do
-      source_attribute(:sub_type_id)    # FK column in this table
-      destination_attribute(:id)         # PK in related table
       allow_nil?(false)
-      validate_destination_attribute?(true)
     end
 
     belongs_to :category, DiabetesV2.Products.ProductCategory do
-      source_attribute(:category_id)    # FK column in this table
-      destination_attribute(:id)         # PK in related table
       allow_nil?(false)
-      validate_destination_attribute?(true)
-
     end
 
-    has_many :aliases, DiabetesV2.Products.ProductAlias do
-      destination_attribute(:product_id)
-    end
+    has_many :aliases, DiabetesV2.Products.ProductAlias, destination_attribute: :product_id
+    has_many :ingredients, DiabetesV2.Products.Ingredient, destination_attribute: :product_id
+    has_many :used_in, DiabetesV2.Products.Ingredient, destination_attribute: :ingredient_product_id
   end
 
   actions do
