@@ -4,5 +4,7 @@ defmodule DiabetesV2.Products do
 
   resources do
     resource(DiabetesV2.Products.ProductMainType)
+    resource(DiabetesV2.Products.ProductSubType)
+    resource(DiabetesV2.Products.ProductCategory)
   end
 end
