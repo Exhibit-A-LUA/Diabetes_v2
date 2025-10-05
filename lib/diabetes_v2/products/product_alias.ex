@@ -7,6 +7,8 @@ defmodule DiabetesV2.Products.ProductAlias do
   attributes do
     integer_primary_key(:id)
 
+    attribute :product_id, :integer
+
     attribute :name, :string do
       allow_nil?(false)
     end
@@ -16,7 +18,10 @@ defmodule DiabetesV2.Products.ProductAlias do
 
   relationships do
     belongs_to :product, DiabetesV2.Products.Product do
+      source_attribute(:product_id)
+      destination_attribute(:id)
       allow_nil?(false)
+      validate_destination_attribute?(true)       # the PK of the related table
     end
   end
 

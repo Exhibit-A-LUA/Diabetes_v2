@@ -67,7 +67,7 @@ import_config "#{config_env()}.exs"
 
 # added to correct compile warnings about foreign key types
 #
-config :ash, :compatible_foreign_key_types,
-  [
-    {Ash.Type.Integer, Ash.Type.UUID}
-  ]
+# config :ash, :compatible_foreign_key_types,
+#   [
+#     {Ash.Type.Integer, Ash.Type.UUID}
+#   ]
