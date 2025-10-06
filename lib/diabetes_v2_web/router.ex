@@ -18,12 +18,14 @@ defmodule DiabetesV2Web.Router do
     pipe_through :browser
 
     live_session :default, on_mount: DiabetesV2Web.LiveUserAuth do
+      # Add this as the home page
+      live "/", DashboardLive, :index
       live "/product_main_types", ProductMainTypeLive.Index, :index
       live "/product_main_types/new", ProductMainTypeLive.Form, :new
       live "/product_main_types/:id/edit", ProductMainTypeLive.Form, :edit
       live "/product_main_types/:id", ProductMainTypeLive.Show, :show
       live "/product_main_types/:id/show/edit", ProductMainTypeLive.Show, :edit
-      get "/", PageController, :home
+      # get "/", PageController, :home
     end
   end
 
