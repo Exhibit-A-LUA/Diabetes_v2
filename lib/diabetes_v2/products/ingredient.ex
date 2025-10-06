@@ -7,8 +7,8 @@ defmodule DiabetesV2.Products.Ingredient do
   attributes do
     integer_primary_key(:id)
 
-    attribute :product_id, :integer
-    attribute :ingredient_product_id, :integer
+    attribute(:product_id, :integer)
+    attribute(:ingredient_product_id, :integer)
 
     attribute :grams, :float do
       allow_nil?(false)
@@ -17,8 +17,8 @@ defmodule DiabetesV2.Products.Ingredient do
     attribute(:weight_description, :string)
 
     attribute(:is_included, :boolean) do
-      default true
-      allow_nil? false
+      default(true)
+      allow_nil?(false)
     end
 
     attribute(:options, :string)
@@ -37,7 +37,7 @@ defmodule DiabetesV2.Products.Ingredient do
   end
 
   actions do
-    defaults([:read, :destroy, create: [], update: []])
+    defaults([:read, :destroy, create: [:*], update: [:*]])
   end
 
   postgres do

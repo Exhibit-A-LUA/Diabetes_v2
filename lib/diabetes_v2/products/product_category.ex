@@ -19,7 +19,7 @@ defmodule DiabetesV2.Products.ProductCategory do
   end
 
   actions do
-    defaults([:read, :destroy, create: [], update: []])
+    defaults([:read, :destroy, create: [:*], update: [:*]])
   end
 
   postgres do
@@ -28,6 +28,6 @@ defmodule DiabetesV2.Products.ProductCategory do
   end
 
   identities do
-    identity :unique_name, [:name]
+    identity(:unique_name, [:name])
   end
 end

@@ -6,6 +6,7 @@ defmodule DiabetesV2.Products.ProductMainType do
 
   attributes do
     integer_primary_key(:id)
+
     attribute :name, :string do
       allow_nil?(false)
     end
@@ -13,11 +14,23 @@ defmodule DiabetesV2.Products.ProductMainType do
     attribute :description, :string do
       allow_nil?(false)
     end
+
     timestamps()
   end
 
   actions do
-    defaults([:read, :destroy, create: [], update: []])
+    defaults([:read, :destroy, create: [:*], update: [:*]])
+
+    # Special seed action that allows setting ID
+    create :seed do
+      accept([:name, :description])
+
+      argument :id, :integer do
+        allow_nil?(false)
+      end
+
+      change(set_attribute(:id, arg(:id)))
+    end
   end
 
   postgres do
@@ -26,6 +39,6 @@ defmodule DiabetesV2.Products.ProductMainType do
   end
 
   identities do
-    identity :unique_name, [:name]
+    identity(:unique_name, [:name])
   end
 end

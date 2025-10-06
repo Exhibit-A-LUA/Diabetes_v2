@@ -17,7 +17,14 @@ defmodule DiabetesV2Web.Router do
   scope "/", DiabetesV2Web do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :default, on_mount: DiabetesV2Web.LiveUserAuth do
+      live "/product_main_types", ProductMainTypeLive.Index, :index
+      live "/product_main_types/new", ProductMainTypeLive.Form, :new
+      live "/product_main_types/:id/edit", ProductMainTypeLive.Form, :edit
+      live "/product_main_types/:id", ProductMainTypeLive.Show, :show
+      live "/product_main_types/:id/show/edit", ProductMainTypeLive.Show, :edit
+      get "/", PageController, :home
+    end
   end
 
   # Other scopes may use custom stacks.

@@ -7,9 +7,9 @@ defmodule DiabetesV2.Products.Product do
   attributes do
     integer_primary_key(:id)
 
-    attribute :main_type_id, :integer
-    attribute :sub_type_id, :integer
-    attribute :category_id, :integer
+    attribute(:main_type_id, :integer)
+    attribute(:sub_type_id, :integer)
+    attribute(:category_id, :integer)
 
     attribute :name, :string do
       allow_nil?(false)
@@ -64,11 +64,13 @@ defmodule DiabetesV2.Products.Product do
 
     has_many :aliases, DiabetesV2.Products.ProductAlias, destination_attribute: :product_id
     has_many :ingredients, DiabetesV2.Products.Ingredient, destination_attribute: :product_id
-    has_many :used_in, DiabetesV2.Products.Ingredient, destination_attribute: :ingredient_product_id
+
+    has_many :used_in, DiabetesV2.Products.Ingredient,
+      destination_attribute: :ingredient_product_id
   end
 
   actions do
-    defaults([:read, :destroy, create: [], update: []])
+    defaults([:read, :destroy, create: [:*], update: [:*]])
   end
 
   postgres do
@@ -77,6 +79,6 @@ defmodule DiabetesV2.Products.Product do
   end
 
   identities do
-    identity :unique_name, [:name]
+    identity(:unique_name, [:name])
   end
 end

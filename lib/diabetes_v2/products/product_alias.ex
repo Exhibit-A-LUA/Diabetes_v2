@@ -7,7 +7,7 @@ defmodule DiabetesV2.Products.ProductAlias do
   attributes do
     integer_primary_key(:id)
 
-    attribute :product_id, :integer
+    attribute(:product_id, :integer)
 
     attribute :name, :string do
       allow_nil?(false)
@@ -23,7 +23,7 @@ defmodule DiabetesV2.Products.ProductAlias do
   end
 
   actions do
-    defaults([:read, :destroy, create: [], update: []])
+    defaults([:read, :destroy, create: [:*], update: [:*]])
   end
 
   postgres do
@@ -32,6 +32,6 @@ defmodule DiabetesV2.Products.ProductAlias do
   end
 
   identities do
-    identity :unique_name, [:name]
+    identity(:unique_name, [:name])
   end
 end
