@@ -2,6 +2,7 @@ defmodule DiabetesV2Web.DashboardLive do
   use DiabetesV2Web, :live_view
 
   alias DiabetesV2.Products.ProductMainType
+  alias DiabetesV2.Products.ProductSubType
 
   @impl true
   def mount(_params, _session, socket) do
@@ -34,9 +35,9 @@ defmodule DiabetesV2Web.DashboardLive do
         <.dashboard_card
           title="Product Sub Types"
           description="Manage product sub type categories"
-          count={0}
-          path="#"
-          active={false}
+          count={@sub_type_count}
+          path={~p"/product_sub_types"}
+          active={true}
         />
         
     <!-- Product Categories Card -->
@@ -134,7 +135,10 @@ defmodule DiabetesV2Web.DashboardLive do
   defp load_stats(socket) do
     # Load counts for each resource
     main_type_count = Ash.count!(ProductMainType, actor: socket.assigns.current_user)
+    sub_type_count = Ash.count!(ProductSubType, actor: socket.assigns.current_user)
 
-    assign(socket, main_type_count: main_type_count)
+    socket
+    |> assign(main_type_count: main_type_count)
+    |> assign(sub_type_count: sub_type_count)
   end
 end
