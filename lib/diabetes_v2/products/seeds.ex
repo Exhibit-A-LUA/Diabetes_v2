@@ -76,8 +76,29 @@ defmodule DiabetesV2.Products.Seeds do
 
   def seed_categories! do
     IO.puts("\nSeeding product_categories...")
-    # TODO: Implement when resource is created
-    IO.puts("  (not yet implemented)")
+
+    Ash.bulk_destroy!(Ash.read!(ProductCategory), :destroy, %{}, return_errors?: true)
+
+    data =
+      File.stream!("priv/repo/product_categories.csv")
+      |> MyParser.parse_stream()
+      |> Enum.map(fn [id, name, description] ->
+        %{
+          id: String.to_integer(id),
+          name: String.trim(name),
+          description: String.trim(description)
+        }
+      end)
+
+    result =
+      Ash.bulk_create(data, ProductCategory, :seed,
+        domain: DiabetesV2.Products,
+        return_errors?: true,
+        return_records?: true
+      )
+
+    IO.puts("✓ Created #{length(result.records)} categories")
+    if result.errors != [], do: IO.inspect(result.errors)
   end
 
   def seed_products! do

@@ -20,6 +20,17 @@ defmodule DiabetesV2.Products.ProductCategory do
 
   actions do
     defaults([:read, :destroy, create: [:*], update: [:*]])
+
+    # Special seed action that allows setting ID
+    create :seed do
+      accept([:name, :description])
+
+      argument :id, :integer do
+        allow_nil?(false)
+      end
+
+      change(set_attribute(:id, arg(:id)))
+    end
   end
 
   postgres do
