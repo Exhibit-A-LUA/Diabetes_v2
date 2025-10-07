@@ -26,11 +26,17 @@ import {hooks as colocatedHooks} from "phoenix-colocated/diabetes_v2"
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+let Hooks = {
+  ...colocatedHooks
+}
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
-})
+  params: { _csrf_token: csrfToken },
+  hooks: Hooks
+});
+
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
@@ -80,4 +86,6 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
+
+
 

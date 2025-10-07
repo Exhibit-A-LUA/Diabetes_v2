@@ -37,6 +37,12 @@ defmodule DiabetesV2Web.Router do
       live "/product_categories/:id/edit", ProductCategoryLive.Form, :edit
       live "/product_categories/:id", ProductCategoryLive.Show, :show
       live "/product_categories/:id/show/edit", ProductCategoryLive.Show, :edit
+
+      live "/products", ProductLive.Index, :index
+      live "/products/new", ProductLive.Form, :new
+      live "/products/:id/edit", ProductLive.Form, :edit
+      live "/products/:id", ProductLive.Show, :show
+      live "/products/:id/show/edit", ProductLive.Show, :edit
       # get "/", PageController, :home
     end
   end
