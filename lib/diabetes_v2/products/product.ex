@@ -97,6 +97,7 @@ defmodule DiabetesV2.Products.Product do
 
     read :with_types do
       prepare(build(load: [:main_type, :sub_type, :category]))
+      pagination(offset?: true, default_limit: 50)
     end
 
     create :create do
