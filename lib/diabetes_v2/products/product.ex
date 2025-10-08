@@ -93,6 +93,9 @@ defmodule DiabetesV2.Products.Product do
 
     read :read do
       primary?(true)
+    end
+
+    read :with_types do
       prepare(build(load: [:main_type, :sub_type, :category]))
     end
 
@@ -199,7 +202,51 @@ defmodule DiabetesV2.Products.Product do
     end
 
     update :update do
-      accept([:*, :main_type_id, :sub_type_id, :category_id])
+      accept([
+        :name,
+        :description,
+        :serving_g,
+        :serving_descr,
+        :calories_kcal,
+        :carbs_g,
+        :fibre_g,
+        :starch_g,
+        :sugars_g,
+        :sugar_alcohol_g,
+        :protein_g,
+        :fat_g,
+        :mono_g,
+        :trans_g,
+        :poly_g,
+        :sat_g,
+        :cholesterol_mg,
+        :glycemic_index,
+        :calcium_mg,
+        :iron_mg,
+        :magnesium_mg,
+        :phosphorus_mg,
+        :potassium_mg,
+        :sodium_mg,
+        :zinc_mg,
+        :copper_mg,
+        :selenium_mcg,
+        :choline_mg,
+        :v_a_retinol_mcg,
+        :v_b9_folate_mcg,
+        :v_b1_thiamin_mg,
+        :v_b2_riboflavin_mg,
+        :v_b3_niacin_mg,
+        :v_b5_mg,
+        :v_b6_mg,
+        :v_b12_mg,
+        :v_c_ascorbic_acid_mg,
+        :v_d_mcg,
+        :v_k_mcg,
+        :v_e_mg,
+        :main_type_id,
+        :sub_type_id,
+        :category_id
+      ])
     end
   end
 

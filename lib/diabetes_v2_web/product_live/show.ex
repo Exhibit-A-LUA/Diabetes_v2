@@ -39,14 +39,30 @@ defmodule DiabetesV2Web.ProductLive.Show do
     """
   end
 
+  # @impl true
+  # def mount(%{"id" => id}, _session, socket) do
+  #   {:ok,
+  #    socket
+  #    |> assign(:page_title, "Show Product")
+  #    |> assign(
+  #      :product,
+  #      Ash.get!(DiabetesV2.Products.Product, id, actor: socket.assigns.current_user)
+  #    )}
+  # end
+
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    require Ash.Query
+
+    product =
+      DiabetesV2.Products.Product
+      |> Ash.Query.for_read(:with_types)
+      |> Ash.Query.filter(id == ^id)
+      |> Ash.read_one!(actor: socket.assigns.current_user)
+
     {:ok,
      socket
      |> assign(:page_title, "Show Product")
-     |> assign(
-       :product,
-       Ash.get!(DiabetesV2.Products.Product, id, actor: socket.assigns.current_user)
-     )}
+     |> assign(:product, product)}
   end
 end

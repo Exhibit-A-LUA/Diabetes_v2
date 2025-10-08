@@ -60,7 +60,9 @@ defmodule DiabetesV2Web.ProductLive.Index do
      |> assign_new(:current_user, fn -> nil end)
      |> stream(
        :products,
-       Ash.read!(DiabetesV2.Products.Product, actor: socket.assigns[:current_user])
+       DiabetesV2.Products.Product
+       |> Ash.Query.for_read(:with_types)
+       |> Ash.read!(actor: socket.assigns[:current_user])
      )}
   end
 

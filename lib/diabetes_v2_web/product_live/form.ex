@@ -29,7 +29,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
             phx-click="toggle_section"
             phx-value-section="basic"
           >
-            Basic Information
+            🧩 Basic Information
           </summary>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
             <.input
@@ -78,7 +78,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
             phx-click="toggle_section"
             phx-value-section="macros"
           >
-            Macronutrients
+            🍞 Macronutrients
           </summary>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
             <.input field={@form[:calories_kcal]} type="number" label="Calories (kcal)" step="0.01" />
@@ -112,7 +112,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
             phx-click="toggle_section"
             phx-value-section="minerals"
           >
-            Minerals
+            🧂 Minerals
           </summary>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
             <.input field={@form[:calcium_mg]} type="number" label="Calcium (mg)" step="0.01" />
@@ -137,7 +137,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
             phx-click="toggle_section"
             phx-value-section="vitamins"
           >
-            Vitamins
+            🍊 Vitamins
           </summary>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
             <.input field={@form[:v_a_retinol_mcg]} type="number" label="Vitamin A (µg)" step="0.01" />
@@ -181,7 +181,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
             phx-click="toggle_section"
             phx-value-section="miscellaneous"
           >
-            Miscellaneous
+            ⚙️ Miscellaneous
           </summary>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
             <.input field={@form[:glycemic_index]} type="number" label="Glycemic Index" step="0.01" />
