@@ -23,7 +23,15 @@ defmodule DiabetesV2.Products.ProductAlias do
   end
 
   actions do
-    defaults([:read, :destroy, create: [:*], update: [:*]])
+    defaults([:read, :destroy])
+
+    create :create do
+      accept([:name, :product_id])
+    end
+
+    update :update do
+      accept([:name, :product_id])
+    end
   end
 
   postgres do
