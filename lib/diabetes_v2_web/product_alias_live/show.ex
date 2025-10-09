@@ -24,6 +24,7 @@ defmodule DiabetesV2Web.ProductAliasLive.Show do
 
       <.list>
         <:item title="Id">{@product_alias.id}</:item>
+        <:item title="Name">{@product_alias.name}</:item>
       </.list>
     </Layouts.app>
     """
