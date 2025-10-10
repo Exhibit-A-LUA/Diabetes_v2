@@ -32,6 +32,17 @@ defmodule DiabetesV2.Products.ProductAlias do
     update :update do
       accept([:name, :product_id])
     end
+
+    # Special seed action that allows setting ID
+    create :seed do
+      accept([:name, :product_id])
+
+      argument :id, :integer do
+        allow_nil?(false)
+      end
+
+      change(set_attribute(:id, arg(:id)))
+    end
   end
 
   postgres do

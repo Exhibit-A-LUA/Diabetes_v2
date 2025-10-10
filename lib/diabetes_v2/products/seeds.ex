@@ -255,8 +255,33 @@ defmodule DiabetesV2.Products.Seeds do
 
   def seed_product_aliases! do
     IO.puts("\nSeeding product_aliases...")
-    # TODO: Implement when resource is created
-    IO.puts("  (not yet implemented)")
+
+    # Use raw SQL to truncate instead of bulk_destroy
+    DiabetesV2.Repo.query!("TRUNCATE TABLE product_aliases RESTART IDENTITY CASCADE")
+
+    # Load lookup tables once and create name -> id maps
+    product_map = build_name_to_id_map(Product)
+
+    data =
+      File.stream!("priv/repo/product_aliases.csv")
+      |> MyParser.parse_stream()
+      |> Enum.map(fn [id, product, alias] ->
+        %{
+          id: String.to_integer(id),
+          product_id: get_id_from_map(product_map, product, "Product"),
+          name: String.trim(alias)
+        }
+      end)
+
+    result =
+      Ash.bulk_create(data, ProductAlias, :seed,
+        domain: DiabetesV2.Products,
+        return_errors?: true,
+        return_records?: true
+      )
+
+    IO.puts("✓ Created #{length(result.records)} aliases")
+    if result.errors != [], do: IO.inspect(result.errors)
   end
 
   def seed_ingredients! do
