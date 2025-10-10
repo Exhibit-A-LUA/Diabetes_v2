@@ -20,30 +20,36 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
         phx-submit="save"
         class="space-y-6"
       >
-        <div class="space-y-2">
-          <!-- Search input -->
-          <input
-            type="text"
-            name="search"
-            label="Search Products"
-            placeholder="Type to filter products..."
-            value={@product_search}
-            phx-change="filter_products"
-            phx-debounce="300"
-            value={@product_search}
-          />
-          
+        <%= if is_nil(@selected_product) do %>
+          <div class="space-y-2">
+            <!-- Search input -->
+            <input
+              type="text"
+              name="search"
+              label="Search Products"
+              placeholder="Type to filter products..."
+              value={@product_search}
+              phx-change="filter_products"
+              phx-debounce="300"
+              value={@product_search}
+            />
+            
     <!-- Product select -->
-          <.input
-            field={@form[:product_id]}
-            type="select"
-            label="Product"
-            options={@filtered_products}
-            prompt="Select a product"
-          />
-        </div>
-        
-    <!-- Alias name -->
+            <.input
+              field={@form[:product_id]}
+              type="select"
+              label="Product"
+              options={@filtered_products}
+              prompt="Select a product"
+            />
+          </div>
+        <% else %>
+          <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
+            <span class="text-sm text-zinc-600 dark:text-zinc-400">Adding alias for:</span>
+            <span class="ml-2 font-semibold">{@selected_product.name}</span>
+          </div>
+        <% end %>
+        <!-- Alias name -->
         <.input field={@form[:name]} type="text" label="Alias Name" />
 
         <div class="flex justify-end gap-4 pt-6">
@@ -65,6 +71,15 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
         id -> Ash.get!(ProductAlias, id, actor: socket.assigns.current_user, load: [:product])
       end
 
+    product_id = params["product_id"]
+
+    selected_product =
+      if product_id do
+        Ash.get!(Product, product_id, actor: socket.assigns.current_user)
+      else
+        product_alias && product_alias.product
+      end
+
     action = if is_nil(product_alias), do: "New", else: "Edit"
     page_title = action <> " Product Alias"
 
@@ -72,6 +87,7 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
       socket
       |> assign(:return_to, return_to(params["return_to"]))
       |> assign(:product_alias, product_alias)
+      |> assign(:selected_product, selected_product)
       |> assign(:page_title, page_title)
       |> assign(:product_search, "")
       |> assign(:filtered_products, load_products(socket, ""))
@@ -79,7 +95,6 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
     {:ok, assign_form(newsocket)}
   end
 
-  defp return_to("show"), do: "show"
   defp return_to(_), do: "index"
 
   @impl true
@@ -94,7 +109,15 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
     product_alias_params = params["product_alias"] || params
     transformed_params = transform_empty_strings(product_alias_params)
 
-    case AshPhoenix.Form.submit(socket.assigns.form, params: transformed_params) do
+    # Add this: Include product_id if we have a selected_product
+    final_params =
+      if socket.assigns[:selected_product] && is_nil(transformed_params["product_id"]) do
+        Map.put(transformed_params, "product_id", socket.assigns.selected_product.id)
+      else
+        transformed_params
+      end
+
+    case AshPhoenix.Form.submit(socket.assigns.form, params: final_params) do
       {:ok, product_alias} ->
         if socket.parent_pid, do: notify_parent({:saved, product_alias})
 
@@ -151,6 +174,7 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
 
   defp assign_form(socket) do
     product_alias = Map.get(socket.assigns, :product_alias)
+    selected_product = Map.get(socket.assigns, :selected_product)
 
     form =
       if product_alias do
@@ -160,11 +184,19 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
           actor: socket.assigns.current_user
         )
       else
-        AshPhoenix.Form.for_create(ProductAlias, :create,
-          as: "product_alias",
-          domain: DiabetesV2.Products,
-          actor: socket.assigns.current_user
-        )
+        base_form =
+          AshPhoenix.Form.for_create(ProductAlias, :create,
+            as: "product_alias",
+            domain: DiabetesV2.Products,
+            actor: socket.assigns.current_user
+          )
+
+        # If we have a selected_product, pre-fill the product_id
+        if selected_product do
+          AshPhoenix.Form.validate(base_form, %{"product_id" => selected_product.id})
+        else
+          base_form
+        end
       end
 
     assign(socket, form: to_form(form))
@@ -177,5 +209,4 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
   end
 
   defp return_path("index", _product_alias), do: ~p"/product_aliases"
-  defp return_path("show", product_alias), do: ~p"/product_aliases/#{product_alias.id}"
 end
