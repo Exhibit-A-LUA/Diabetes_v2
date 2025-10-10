@@ -216,9 +216,11 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   defp product_name_from_id(nil), do: ""
 
   defp product_name_from_id(id) do
-    case Ash.get(DiabetesV2.Products.Product, id, actor: nil) do
-      product -> product.name
-    end
+    product = Ash.get!(DiabetesV2.Products.Product, id, actor: nil)
+    product.name
+    # case Ash.get(DiabetesV2.Products.Product, id, actor: nil) do
+    #   product -> product.name
+    # end
   end
 
   defp return_path("index", _ingredient), do: ~p"/ingredients"
