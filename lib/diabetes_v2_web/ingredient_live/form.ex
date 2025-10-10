@@ -2,6 +2,9 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   use DiabetesV2Web, :live_view
 
   import DiabetesV2Web.ParamHelpers
+  import Ash.Query
+
+  alias DiabetesV2.Products.{Ingredient, Product}
 
   @impl true
   def render(assigns) do
@@ -19,14 +22,50 @@ defmodule DiabetesV2Web.IngredientLive.Form do
         phx-submit="save"
       >
         <%= if is_nil(@product_id) do %>
-          <.input field={@form[:product_id]} type="text" label="Prod Id" />
+          <div class="space-y-2">
+            <!-- Product search -->
+            <input
+              type="text"
+              name="product_search"
+              placeholder="Type to filter products..."
+              value={@product_search}
+              phx-change="filter_products"
+              phx-debounce="300"
+            />
+
+            <.input
+              field={@form[:product_id]}
+              type="select"
+              label="Product"
+              options={@filtered_products}
+              prompt="Select a product"
+            />
+          </div>
         <% else %>
           <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
             <span class="text-sm text-zinc-600 dark:text-zinc-400">Adding Ingredient for:</span>
-            <span class="ml-2 font-semibold">{@product_id}</span>
+            <span class="ml-2 font-semibold">{product_name_from_id(@product_id)}</span>
           </div>
         <% end %>
-        <.input field={@form[:ingredient_product_id]} type="text" label="Ingred Id" />
+        <div class="space-y-2">
+          <input
+            type="text"
+            name="ingredient_search"
+            placeholder="Type to filter ingredients..."
+            value={@ingredient_search}
+            phx-change="filter_ingredients"
+            phx-debounce="300"
+          />
+
+          <.input
+            field={@form[:ingredient_product_id]}
+            type="select"
+            label="Ingredient"
+            options={@filtered_ingredients}
+            prompt="Select an ingredient"
+          />
+        </div>
+
         <.input field={@form[:grams]} type="number" step="any" label="Grams" />
         <.input field={@form[:weight_description]} type="text" label="Descr" />
         <.input field={@form[:is_included]} type="checkbox" label="Included?" />
@@ -61,6 +100,10 @@ defmodule DiabetesV2Web.IngredientLive.Form do
      |> assign(ingredient: ingredient)
      |> assign(:product_id, product_id)
      |> assign(:page_title, page_title)
+     |> assign(:product_search, "")
+     |> assign(:ingredient_search, "")
+     |> assign(:filtered_products, load_products(socket, ""))
+     |> assign(:filtered_ingredients, load_products(socket, ""))
      |> assign_form()}
   end
 
@@ -97,7 +140,53 @@ defmodule DiabetesV2Web.IngredientLive.Form do
     end
   end
 
+  @impl true
+  def handle_event("filter_products", %{"product_search" => query}, socket) do
+    products =
+      DiabetesV2.Products.Product
+      |> filter(name: [ilike: "%#{query}%"])
+      |> Ash.read!(actor: socket.assigns.current_user)
+
+    {:noreply,
+     socket
+     |> assign(:filtered_products, Enum.map(products, &{&1.name, &1.id}))
+     |> assign(:product_search, query)}
+  end
+
+  @impl true
+  def handle_event("filter_ingredients", %{"ingredient_search" => query}, socket) do
+    ingredients =
+      DiabetesV2.Products.Product
+      |> filter(name: [ilike: "%#{query}%"])
+      |> Ash.read!(actor: socket.assigns.current_user)
+
+    {:noreply,
+     socket
+     |> assign(:filtered_ingredients, Enum.map(ingredients, &{&1.name, &1.id}))
+     |> assign(:ingredient_search, query)}
+  end
+
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
+
+  defp load_products(socket, query) do
+    require Ash.Query
+    pattern = "%" <> query <> "%"
+
+    result =
+      Product
+      |> Ash.Query.filter(ilike(:name, ^pattern))
+      |> Ash.read!(actor: socket.assigns.current_user)
+
+    # Handle both cases: either a list or an Ash.Page struct
+    products =
+      case result do
+        %Ash.Page.Offset{results: list} -> list
+        %Ash.Page.Keyset{results: list} -> list
+        list when is_list(list) -> list
+      end
+
+    Enum.map(products, &{&1.name, &1.id})
+  end
 
   defp assign_form(%{assigns: %{ingredient: ingredient}} = socket) do
     form =
@@ -122,6 +211,14 @@ defmodule DiabetesV2Web.IngredientLive.Form do
       end
 
     assign(socket, form: to_form(form))
+  end
+
+  defp product_name_from_id(nil), do: ""
+
+  defp product_name_from_id(id) do
+    case Ash.get(DiabetesV2.Products.Product, id, actor: nil) do
+      product -> product.name
+    end
   end
 
   defp return_path("index", _ingredient), do: ~p"/ingredients"

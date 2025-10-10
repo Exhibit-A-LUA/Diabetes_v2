@@ -1,6 +1,8 @@
 defmodule DiabetesV2Web.ProductLive.Form do
   use DiabetesV2Web, :live_view
 
+  import DiabetesV2Web.ParamHelpers
+
   alias DiabetesV2.Products.{Product, ProductMainType, ProductSubType, ProductCategory}
 
   @impl true
@@ -302,11 +304,11 @@ defmodule DiabetesV2Web.ProductLive.Form do
   end
 
   # Helper to convert empty strings to nil
-  defp transform_empty_strings(params) when is_map(params) do
-    Enum.reduce(params, %{}, fn {key, value}, acc ->
-      Map.put(acc, key, if(value == "", do: nil, else: value))
-    end)
-  end
+  # defp transform_empty_strings(params) when is_map(params) do
+  #   Enum.reduce(params, %{}, fn {key, value}, acc ->
+  #     Map.put(acc, key, if(value == "", do: nil, else: value))
+  #   end)
+  # end
 
   defp return_path("index", _product), do: ~p"/products"
   defp return_path("show", product), do: ~p"/products/#{product.id}"
