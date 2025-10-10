@@ -6,7 +6,8 @@ defmodule DiabetesV2Web.DashboardLive do
     ProductSubType,
     ProductCategory,
     Product,
-    ProductAlias
+    ProductAlias,
+    Ingredient
   }
 
   @impl true
@@ -76,9 +77,9 @@ defmodule DiabetesV2Web.DashboardLive do
         <.dashboard_card
           title="Ingredients"
           description="Manage product ingredients"
-          count={0}
-          path="#"
-          active={false}
+          count={@ingredient_count}
+          path={~p"/ingredients"}
+          active={true}
         />
       </div>
     </div>
@@ -144,6 +145,7 @@ defmodule DiabetesV2Web.DashboardLive do
     category_count = Ash.count!(ProductCategory, actor: socket.assigns.current_user)
     product_count = Ash.count!(Product, actor: socket.assigns.current_user)
     product_alias_count = Ash.count!(ProductAlias, actor: socket.assigns.current_user)
+    ingredient_count = Ash.count!(Ingredient, actor: socket.assigns.current_user)
 
     socket
     |> assign(main_type_count: main_type_count)
@@ -151,5 +153,6 @@ defmodule DiabetesV2Web.DashboardLive do
     |> assign(category_count: category_count)
     |> assign(product_count: product_count)
     |> assign(product_alias_count: product_alias_count)
+    |> assign(ingredient_count: ingredient_count)
   end
 end
