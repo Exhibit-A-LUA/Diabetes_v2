@@ -18,7 +18,14 @@ defmodule DiabetesV2Web.IngredientLive.Form do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:product_id]} type="text" label="Prod Id" />
+        <%= if is_nil(@product_id) do %>
+          <.input field={@form[:product_id]} type="text" label="Prod Id" />
+        <% else %>
+          <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
+            <span class="text-sm text-zinc-600 dark:text-zinc-400">Adding Ingredient for:</span>
+            <span class="ml-2 font-semibold">{@product_id}</span>
+          </div>
+        <% end %>
         <.input field={@form[:ingredient_product_id]} type="text" label="Ingred Id" />
         <.input field={@form[:grams]} type="number" step="any" label="Grams" />
         <.input field={@form[:weight_description]} type="text" label="Descr" />
@@ -33,6 +40,12 @@ defmodule DiabetesV2Web.IngredientLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
+    product_id =
+      case params["product_id"] do
+        nil -> nil
+        id -> String.to_integer(id)
+      end
+
     ingredient =
       case params["id"] do
         nil -> nil
@@ -46,6 +59,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
      socket
      |> assign(:return_to, return_to(params["return_to"]))
      |> assign(ingredient: ingredient)
+     |> assign(:product_id, product_id)
      |> assign(:page_title, page_title)
      |> assign_form()}
   end
@@ -62,7 +76,10 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   end
 
   def handle_event("save", %{"ingredient" => ingredient_params}, socket) do
-    ingredient_params = transform_empty_strings(ingredient_params)
+    ingredient_params =
+      ingredient_params
+      |> transform_empty_strings()
+      |> Map.put_new("product_id", socket.assigns.product_id)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: ingredient_params) do
       {:ok, ingredient} ->
@@ -90,9 +107,17 @@ defmodule DiabetesV2Web.IngredientLive.Form do
           actor: socket.assigns.current_user
         )
       else
+        changes = %{}
+
+        changes =
+          if socket.assigns.product_id,
+            do: Map.put(changes, :product_id, socket.assigns.product_id),
+            else: changes
+
         AshPhoenix.Form.for_create(DiabetesV2.Products.Ingredient, :create,
           as: "ingredient",
-          actor: socket.assigns.current_user
+          actor: socket.assigns.current_user,
+          change: changes
         )
       end
 

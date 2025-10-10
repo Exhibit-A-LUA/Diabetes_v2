@@ -1,5 +1,8 @@
 defmodule DiabetesV2Web.ProductAliasLive.Form do
   use DiabetesV2Web, :live_view
+
+  import DiabetesV2Web.ParamHelpers
+
   import Ash.Query
 
   alias DiabetesV2.Products.{ProductAlias, Product}
@@ -202,11 +205,11 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
     assign(socket, form: to_form(form))
   end
 
-  defp transform_empty_strings(params) when is_map(params) do
-    Enum.reduce(params, %{}, fn {key, value}, acc ->
-      Map.put(acc, key, if(value == "", do: nil, else: value))
-    end)
-  end
+  # defp transform_empty_strings(params) when is_map(params) do
+  #   Enum.reduce(params, %{}, fn {key, value}, acc ->
+  #     Map.put(acc, key, if(value == "", do: nil, else: value))
+  #   end)
+  # end
 
   defp return_path("index", _product_alias), do: ~p"/product_aliases"
 end
