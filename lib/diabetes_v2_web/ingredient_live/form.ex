@@ -42,13 +42,18 @@ defmodule DiabetesV2Web.IngredientLive.Form do
                   class="w-full rounded border border-zinc-300 dark:border-zinc-600 p-2 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
                 />
 
-                <.input
-                  field={@form[:product_id]}
-                  type="select"
-                  label="Product"
-                  options={@filtered_products}
-                  prompt="Select a product"
-                />
+                <div class="border border-zinc-200 dark:border-zinc-700 rounded-md max-h-64 overflow-y-auto bg-white dark:bg-zinc-800">
+                  <%= for {name, id} <- @filtered_products do %>
+                    <div
+                      phx-click="select_product"
+                      phx-value-id={id}
+                      class="cursor-pointer p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center"
+                    >
+                      <span class="text-sm text-zinc-900 dark:text-zinc-100">{name}</span>
+                      <span class="text-xs text-zinc-500 dark:text-zinc-400">ID: {id}</span>
+                    </div>
+                  <% end %>
+                </div>
               </div>
             <% else %>
               <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
@@ -58,25 +63,37 @@ defmodule DiabetesV2Web.IngredientLive.Form do
             <% end %>
             
     <!-- Ingredient selection -->
-            <div class="space-y-2">
-              <input
-                type="text"
-                name="ingredient_search"
-                placeholder="Type to filter ingredients..."
-                value={@ingredient_search}
-                phx-change="filter_ingredients"
-                phx-debounce="300"
-                class="w-full rounded border border-zinc-300 dark:border-zinc-600 p-2 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
-              />
+            <%= if is_nil(@ingredient_product_id) do %>
+              <div class="space-y-2">
+                <input
+                  type="text"
+                  name="ingredient_search"
+                  placeholder="Type to filter ingredients..."
+                  value={@ingredient_search}
+                  phx-change="filter_ingredients"
+                  phx-debounce="300"
+                  class="w-full rounded border border-zinc-300 dark:border-zinc-600 p-2 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
 
-              <.input
-                field={@form[:ingredient_product_id]}
-                type="select"
-                label="Ingredient"
-                options={@filtered_ingredients}
-                prompt="Select an ingredient"
-              />
-            </div>
+                <div class="border border-zinc-200 dark:border-zinc-700 rounded-md max-h-64 overflow-y-auto bg-white dark:bg-zinc-800">
+                  <%= for {name, id} <- @filtered_ingredients do %>
+                    <div
+                      phx-click="select_ingredient"
+                      phx-value-id={id}
+                      class="cursor-pointer p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center"
+                    >
+                      <span class="text-sm text-zinc-900 dark:text-zinc-100">{name}</span>
+                      <span class="text-xs text-zinc-500 dark:text-zinc-400">ID: {id}</span>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% else %>
+              <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded">
+                <span class="text-sm text-zinc-600 dark:text-zinc-400">Selected Ingredient:</span>
+                <span class="ml-2 font-semibold">{product_name_from_id(@ingredient_product_id)}</span>
+              </div>
+            <% end %>
             
     <!-- Other fields -->
             <div class="grid grid-cols-2 gap-4">
@@ -121,6 +138,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
      |> assign(:return_to, return_to(params["return_to"]))
      |> assign(ingredient: ingredient)
      |> assign(:product_id, product_id)
+     |> assign(:ingredient_product_id, nil)
      |> assign(:page_title, page_title)
      |> assign(:product_search, "")
      |> assign(:ingredient_search, "")
@@ -145,6 +163,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
       ingredient_params
       |> transform_empty_strings()
       |> Map.put_new("product_id", socket.assigns.product_id)
+      |> Map.put_new("ingredient_product_id", socket.assigns.ingredient_product_id)
 
     case AshPhoenix.Form.submit(socket.assigns.form, params: ingredient_params) do
       {:ok, ingredient} ->
@@ -186,6 +205,44 @@ defmodule DiabetesV2Web.IngredientLive.Form do
      socket
      |> assign(:filtered_ingredients, Enum.map(ingredients, &{&1.name, &1.id}))
      |> assign(:ingredient_search, query)}
+  end
+
+  # ---------------------------
+  # Select Handlers
+  # ---------------------------
+
+  @impl true
+  def handle_event("select_product", %{"id" => id}, socket) do
+    product_id = String.to_integer(id)
+
+    # Update form to prefill product_id if needed
+    form =
+      socket.assigns.form
+      |> AshPhoenix.Form.validate(%{"product_id" => product_id})
+
+    {:noreply,
+     socket
+     |> assign(:product_id, product_id)
+     |> assign(:product_search, "")
+     |> assign(:filtered_products, [])
+     |> assign(:form, to_form(form))}
+  end
+
+  @impl true
+  def handle_event("select_ingredient", %{"id" => id}, socket) do
+    ingredient_product_id = String.to_integer(id)
+
+    form =
+      socket.assigns.form
+      |> AshPhoenix.Form.validate(%{"ingredient_product_id" => ingredient_product_id})
+
+    {:noreply,
+     socket
+     # Store it like product_id
+     |> assign(:ingredient_product_id, ingredient_product_id)
+     |> assign(:ingredient_search, "")
+     |> assign(:filtered_ingredients, [])
+     |> assign(:form, to_form(form))}
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
