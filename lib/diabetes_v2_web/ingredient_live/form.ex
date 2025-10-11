@@ -4,7 +4,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   import DiabetesV2Web.ParamHelpers
   import Ash.Query
 
-  alias DiabetesV2.Products.{Ingredient, Product}
+  alias DiabetesV2.Products.{Ingredient, Product, ProductAlias}
 
   @impl true
   def render(assigns) do
@@ -35,7 +35,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
                 <input
                   type="text"
                   name="product_search"
-                  placeholder="Type to filter products..."
+                  placeholder="Type to select from products..."
                   value={@product_search}
                   phx-change="filter_products"
                   phx-debounce="300"
@@ -43,13 +43,29 @@ defmodule DiabetesV2Web.IngredientLive.Form do
                 />
 
                 <div class="border border-zinc-200 dark:border-zinc-700 rounded-md max-h-64 overflow-y-auto bg-white dark:bg-zinc-800">
-                  <%= for {name, id} <- @filtered_products do %>
+                  <%!-- <%= for {name, id} <- @filtered_products do %>
                     <div
                       phx-click="select_product"
                       phx-value-id={id}
                       class="cursor-pointer p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center"
                     >
                       <span class="text-sm text-zinc-900 dark:text-zinc-100">{name}</span>
+                      <span class="text-xs text-zinc-500 dark:text-zinc-400">ID: {id}</span>
+                    </div>
+                  <% end %> --%>
+                  <%= for {name, id, is_alias} <- @filtered_products do %>
+                    <div
+                      phx-click="select_product"
+                      phx-value-id={id}
+                      class="cursor-pointer p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center"
+                    >
+                      <span class="text-sm text-zinc-900 dark:text-zinc-100">
+                        <%= if is_alias do %>
+                          <span class="text-zinc-500">{name} →</span> {product_name_from_id(id)}
+                        <% else %>
+                          {name}
+                        <% end %>
+                      </span>
                       <span class="text-xs text-zinc-500 dark:text-zinc-400">ID: {id}</span>
                     </div>
                   <% end %>
@@ -68,7 +84,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
                 <input
                   type="text"
                   name="ingredient_search"
-                  placeholder="Type to filter ingredients..."
+                  placeholder="Type to select from ingredients..."
                   value={@ingredient_search}
                   phx-change="filter_ingredients"
                   phx-debounce="300"
@@ -76,13 +92,30 @@ defmodule DiabetesV2Web.IngredientLive.Form do
                 />
 
                 <div class="border border-zinc-200 dark:border-zinc-700 rounded-md max-h-64 overflow-y-auto bg-white dark:bg-zinc-800">
-                  <%= for {name, id} <- @filtered_ingredients do %>
+                  <%!-- <%= for {name, id} <- @filtered_ingredients do %>
                     <div
                       phx-click="select_ingredient"
                       phx-value-id={id}
                       class="cursor-pointer p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center"
                     >
                       <span class="text-sm text-zinc-900 dark:text-zinc-100">{name}</span>
+                      <span class="text-xs text-zinc-500 dark:text-zinc-400">ID: {id}</span>
+                    </div>
+                  <% end %> --%>
+                  <%= for {name, id, is_alias} <- @filtered_ingredients do %>
+                    <div
+                      phx-click="select_ingredient"
+                      phx-value-id={id}
+                      class="cursor-pointer p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center"
+                    >
+                      <span class="text-sm text-zinc-900 dark:text-zinc-100">
+                        <%= if is_alias do %>
+                          <span class="text-zinc-500">{name} →</span> {product_name_from_id(id)}
+                        <% else %>
+                          {name}
+                        <% end %>
+                      </span>
+
                       <span class="text-xs text-zinc-500 dark:text-zinc-400">ID: {id}</span>
                     </div>
                   <% end %>
@@ -148,8 +181,8 @@ defmodule DiabetesV2Web.IngredientLive.Form do
      |> assign(:page_title, page_title)
      |> assign(:product_search, "")
      |> assign(:ingredient_search, "")
-     |> assign(:filtered_products, load_products(socket, ""))
-     |> assign(:filtered_ingredients, load_products(socket, ""))
+     |> assign(:filtered_products, [])
+     |> assign(:filtered_ingredients, [])
      |> assign_form()}
   end
 
@@ -189,29 +222,59 @@ defmodule DiabetesV2Web.IngredientLive.Form do
 
   @impl true
   def handle_event("filter_products", %{"product_search" => query}, socket) do
-    products =
-      Product
-      |> filter(name: [ilike: "%#{query}%"])
-      |> Ash.read!(actor: socket.assigns.current_user)
+    results =
+      if String.length(query) >= 2 do
+        search_products_and_aliases(query, socket.assigns.current_user)
+      else
+        []
+      end
 
     {:noreply,
      socket
-     |> assign(:filtered_products, Enum.map(products, &{&1.name, &1.id}))
+     |> assign(:filtered_products, results)
      |> assign(:product_search, query)}
   end
 
+  # @impl true
+  # def handle_event("filter_products", %{"product_search" => query}, socket) do
+  #   products =
+  #     Product
+  #     |> filter(name: [ilike: "%#{query}%"])
+  #     |> Ash.read!(actor: socket.assigns.current_user)
+
+  #   {:noreply,
+  #    socket
+  #    |> assign(:filtered_products, Enum.map(products, &{&1.name, &1.id}))
+  #    |> assign(:product_search, query)}
+  # end
+
   @impl true
   def handle_event("filter_ingredients", %{"ingredient_search" => query}, socket) do
-    ingredients =
-      Product
-      |> filter(name: [ilike: "%#{query}%"])
-      |> Ash.read!(actor: socket.assigns.current_user)
+    results =
+      if String.length(query) >= 2 do
+        search_products_and_aliases(query, socket.assigns.current_user)
+      else
+        []
+      end
 
     {:noreply,
      socket
-     |> assign(:filtered_ingredients, Enum.map(ingredients, &{&1.name, &1.id}))
+     |> assign(:filtered_ingredients, results)
      |> assign(:ingredient_search, query)}
   end
+
+  # @impl true
+  # def handle_event("filter_ingredients", %{"ingredient_search" => query}, socket) do
+  #   ingredients =
+  #     Product
+  #     |> filter(name: [ilike: "%#{query}%"])
+  #     |> Ash.read!(actor: socket.assigns.current_user)
+
+  #   {:noreply,
+  #    socket
+  #    |> assign(:filtered_ingredients, Enum.map(ingredients, &{&1.name, &1.id}))
+  #    |> assign(:ingredient_search, query)}
+  # end
 
   # ---------------------------
   # Select Handlers
@@ -253,25 +316,45 @@ defmodule DiabetesV2Web.IngredientLive.Form do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp load_products(socket, query) do
-    require Ash.Query
-    pattern = "%" <> query <> "%"
-
-    result =
-      Product
-      |> Ash.Query.filter(ilike(:name, ^pattern))
-      |> Ash.read!(actor: socket.assigns.current_user)
-
-    # Handle both cases: either a list or an Ash.Page struct
+  defp search_products_and_aliases(query, actor) do
+    # Search products
     products =
-      case result do
-        %Ash.Page.Offset{results: list} -> list
-        %Ash.Page.Keyset{results: list} -> list
-        list when is_list(list) -> list
-      end
+      Product
+      |> filter(name: [ilike: "%#{query}%"])
+      |> Ash.read!(actor: actor)
+      |> Enum.map(&{&1.name, &1.id, false})
 
-    Enum.map(products, &{&1.name, &1.id})
+    # Search aliases
+    aliases =
+      ProductAlias
+      |> filter(name: [ilike: "%#{query}%"])
+      |> Ash.read!(actor: actor)
+      |> Enum.map(&{&1.name, &1.product_id, true})
+
+    # Combine and sort
+    (products ++ aliases)
+    |> Enum.sort_by(fn {name, _, _} -> name end)
   end
+
+  # defp load_products(socket, query) do
+  #   require Ash.Query
+  #   pattern = "%" <> query <> "%"
+
+  #   result =
+  #     Product
+  #     |> Ash.Query.filter(ilike(:name, ^pattern))
+  #     |> Ash.read!(actor: socket.assigns.current_user)
+
+  #   # Handle both cases: either a list or an Ash.Page struct
+  #   products =
+  #     case result do
+  #       %Ash.Page.Offset{results: list} -> list
+  #       %Ash.Page.Keyset{results: list} -> list
+  #       list when is_list(list) -> list
+  #     end
+
+  #   Enum.map(products, &{&1.name, &1.id})
+  # end
 
   defp assign_form(socket) do
     ingredient = Map.get(socket.assigns, :ingredient)
