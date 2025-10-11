@@ -102,7 +102,7 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
 
   @impl true
   def handle_event("validate", %{"product_alias" => product_alias_params}, socket) do
-    params = transform_empty_strings(product_alias_params)
+    params = normalize_form_params(product_alias_params)
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: to_form(form))}
   end
@@ -110,7 +110,7 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
   @impl true
   def handle_event("save", params, socket) do
     product_alias_params = params["product_alias"] || params
-    transformed_params = transform_empty_strings(product_alias_params)
+    transformed_params = normalize_form_params(product_alias_params)
 
     # Add this: Include product_id if we have a selected_product
     final_params =
@@ -204,12 +204,6 @@ defmodule DiabetesV2Web.ProductAliasLive.Form do
 
     assign(socket, form: to_form(form))
   end
-
-  # defp transform_empty_strings(params) when is_map(params) do
-  #   Enum.reduce(params, %{}, fn {key, value}, acc ->
-  #     Map.put(acc, key, if(value == "", do: nil, else: value))
-  #   end)
-  # end
 
   defp return_path("index", _product_alias), do: ~p"/product_aliases"
 end

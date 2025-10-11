@@ -284,9 +284,77 @@ defmodule DiabetesV2.Products.Seeds do
     if result.errors != [], do: IO.inspect(result.errors)
   end
 
+  # Helper to parse booleans
+  def parse_boolean("yes"), do: true
+  def parse_boolean("no"), do: false
+  # fallback in case of unexpected values
+  def parse_boolean(_), do: nil
+
   def seed_ingredients! do
     IO.puts("\nSeeding ingredients...")
-    # TODO: Implement when resource is created
-    IO.puts("  (not yet implemented)")
+    # Use raw SQL to truncate instead of bulk_destroy
+    DiabetesV2.Repo.query!("TRUNCATE TABLE ingredients RESTART IDENTITY CASCADE")
+
+    # Load lookup tables once and create name -> id maps
+    product_map = build_name_to_id_map(Product)
+    # ADD THIS
+    alias_map = build_alias_to_product_id_map()
+
+    data =
+      File.stream!("priv/repo/ingredients.csv")
+      |> MyParser.parse_stream()
+      |> Enum.map(fn [id, _recipe_num, product, ingredient, options, grams, included] ->
+        %{
+          id: String.to_integer(id),
+          product_id: get_id_from_map(product_map, product, "Product"),
+          ingredient_product_id:
+            get_id_with_alias_fallback(product_map, alias_map, ingredient, "Ingredient"),
+          grams: parse_float(grams),
+          weight_description: "",
+          is_included: parse_boolean(included),
+          options: String.trim(options)
+        }
+      end)
+
+    result =
+      Ash.bulk_create(data, Ingredient, :seed,
+        domain: DiabetesV2.Products,
+        return_errors?: true,
+        return_records?: true
+      )
+
+    IO.puts("✓ Created #{length(result.records)} ingredients")
+    if result.errors != [], do: IO.inspect(result.errors)
+  end
+
+  # Build a map of alias name -> product_id
+  defp build_alias_to_product_id_map do
+    ProductAlias
+    |> Ash.read!()
+    |> Enum.map(&{&1.name, &1.id})
+    |> Map.new()
+  end
+
+  # Get ID from product map, or fall back to alias map
+  defp get_id_with_alias_fallback(product_map, alias_map, name, context) do
+    name = String.trim(name)
+
+    case Map.get(product_map, name) do
+      nil ->
+        # Not found in products, check aliases
+        case Map.get(alias_map, name) do
+          nil ->
+            IO.puts("⚠️  #{context} '#{name}' not found in products or aliases")
+            nil
+
+          product_id ->
+            IO.puts("✓ Found '#{name}' in aliases, mapped to product_id #{product_id}")
+            product_id
+        end
+
+      product_id ->
+        # Found in products directly
+        product_id
+    end
   end
 end

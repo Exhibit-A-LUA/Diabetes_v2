@@ -3,5 +3,5 @@
 # DiabetesV2.Products.Seeds.seed_sub_types!()
 # DiabetesV2.Products.Seeds.seed_categories!()
 # DiabetesV2.Products.Seeds.seed_products!()
-DiabetesV2.Products.Seeds.seed_product_aliases!()
-# DiabetesV2.Products.Seeds.seed_ingredients!()
+# DiabetesV2.Products.Seeds.seed_product_aliases!()
+DiabetesV2.Products.Seeds.seed_ingredients!()

@@ -152,7 +152,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
 
   @impl true
   def handle_event("validate", %{"ingredient" => ingredient_params}, socket) do
-    ingredient_params = transform_empty_strings(ingredient_params)
+    ingredient_params = normalize_form_params(ingredient_params)
 
     {:noreply,
      assign(socket, form: AshPhoenix.Form.validate(socket.assigns.form, ingredient_params))}
@@ -161,7 +161,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   def handle_event("save", %{"ingredient" => ingredient_params}, socket) do
     ingredient_params =
       ingredient_params
-      |> transform_empty_strings()
+      |> normalize_form_params()
       |> Map.put_new("product_id", socket.assigns.product_id)
       |> Map.put_new("ingredient_product_id", socket.assigns.ingredient_product_id)
 

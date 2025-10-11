@@ -239,7 +239,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
 
   @impl true
   def handle_event("validate", %{"product" => product_params}, socket) do
-    params = transform_empty_strings(product_params)
+    params = normalize_form_params(product_params)
     form = AshPhoenix.Form.validate(socket.assigns.form, params)
     {:noreply, assign(socket, form: to_form(form))}
   end
@@ -304,7 +304,7 @@ defmodule DiabetesV2Web.ProductLive.Form do
   end
 
   # Helper to convert empty strings to nil
-  # defp transform_empty_strings(params) when is_map(params) do
+  # defp normalize_form_params(params) when is_map(params) do
   #   Enum.reduce(params, %{}, fn {key, value}, acc ->
   #     Map.put(acc, key, if(value == "", do: nil, else: value))
   #   end)

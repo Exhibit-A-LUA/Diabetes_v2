@@ -65,6 +65,24 @@ defmodule DiabetesV2.Products.Ingredient do
         :options
       ])
     end
+
+    # Special seed action that allows setting ID
+    create :seed do
+      accept([
+        :product_id,
+        :ingredient_product_id,
+        :grams,
+        :weight_description,
+        :is_included,
+        :options
+      ])
+
+      argument :id, :integer do
+        allow_nil?(false)
+      end
+
+      change(set_attribute(:id, arg(:id)))
+    end
   end
 
   postgres do
