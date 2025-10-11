@@ -13,66 +13,88 @@ defmodule DiabetesV2Web.IngredientLive.Form do
       <.header>
         {@page_title}
         <:subtitle>Use this form to manage ingredient records in your database.</:subtitle>
+        <:actions>
+          <.button variant="primary" navigate={return_path(@return_to, @ingredient)}>
+            Cancel
+          </.button>
+        </:actions>
       </.header>
 
-      <.form
-        for={@form}
-        id="ingredient-form"
-        phx-change="validate"
-        phx-submit="save"
-      >
-        <%= if is_nil(@product_id) do %>
-          <div class="space-y-2">
-            <!-- Product search -->
-            <input
-              type="text"
-              name="product_search"
-              placeholder="Type to filter products..."
-              value={@product_search}
-              phx-change="filter_products"
-              phx-debounce="300"
-            />
+      <div class="mt-6 space-y-6">
+        <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-6 bg-white dark:bg-zinc-800">
+          <.form
+            for={@form}
+            id="ingredient-form"
+            phx-change="validate"
+            phx-submit="save"
+            class="space-y-4"
+          >
+            <!-- Product selection / display -->
+            <%= if is_nil(@product_id) do %>
+              <div class="space-y-2">
+                <input
+                  type="text"
+                  name="product_search"
+                  placeholder="Type to filter products..."
+                  value={@product_search}
+                  phx-change="filter_products"
+                  phx-debounce="300"
+                  class="w-full rounded border border-zinc-300 dark:border-zinc-600 p-2 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
 
-            <.input
-              field={@form[:product_id]}
-              type="select"
-              label="Product"
-              options={@filtered_products}
-              prompt="Select a product"
-            />
-          </div>
-        <% else %>
-          <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
-            <span class="text-sm text-zinc-600 dark:text-zinc-400">Adding Ingredient for:</span>
-            <span class="ml-2 font-semibold">{product_name_from_id(@product_id)}</span>
-          </div>
-        <% end %>
-        <div class="space-y-2">
-          <input
-            type="text"
-            name="ingredient_search"
-            placeholder="Type to filter ingredients..."
-            value={@ingredient_search}
-            phx-change="filter_ingredients"
-            phx-debounce="300"
-          />
+                <.input
+                  field={@form[:product_id]}
+                  type="select"
+                  label="Product"
+                  options={@filtered_products}
+                  prompt="Select a product"
+                />
+              </div>
+            <% else %>
+              <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
+                <span class="text-sm text-zinc-600 dark:text-zinc-400">Adding Ingredient for:</span>
+                <span class="ml-2 font-semibold">{product_name_from_id(@product_id)}</span>
+              </div>
+            <% end %>
+            
+    <!-- Ingredient selection -->
+            <div class="space-y-2">
+              <input
+                type="text"
+                name="ingredient_search"
+                placeholder="Type to filter ingredients..."
+                value={@ingredient_search}
+                phx-change="filter_ingredients"
+                phx-debounce="300"
+                class="w-full rounded border border-zinc-300 dark:border-zinc-600 p-2 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+              />
 
-          <.input
-            field={@form[:ingredient_product_id]}
-            type="select"
-            label="Ingredient"
-            options={@filtered_ingredients}
-            prompt="Select an ingredient"
-          />
+              <.input
+                field={@form[:ingredient_product_id]}
+                type="select"
+                label="Ingredient"
+                options={@filtered_ingredients}
+                prompt="Select an ingredient"
+              />
+            </div>
+            
+    <!-- Other fields -->
+            <div class="grid grid-cols-2 gap-4">
+              <.input field={@form[:grams]} type="number" step="any" label="Grams" />
+              <.input field={@form[:weight_description]} type="text" label="Description" />
+            </div>
+
+            <div class="flex items-center gap-6">
+              <.input field={@form[:is_included]} type="checkbox" label="Included?" />
+              <.input field={@form[:options]} type="text" label="Options" />
+            </div>
+
+            <div class="flex justify-end gap-4 pt-4">
+              <.button phx-disable-with="Saving..." variant="primary">Save Ingredient</.button>
+            </div>
+          </.form>
         </div>
-
-        <.input field={@form[:grams]} type="number" step="any" label="Grams" />
-        <.input field={@form[:weight_description]} type="text" label="Descr" />
-        <.input field={@form[:is_included]} type="checkbox" label="Included?" />
-        <.input field={@form[:options]} type="text" label="Opts" />
-        <.button phx-disable-with="Saving..." variant="primary">Save Ingredient</.button>
-        <.button navigate={return_path(@return_to, @ingredient)}>Cancel</.button>
-      </.form>
+      </div>
     </Layouts.app>
     """
   end
@@ -88,7 +110,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
     ingredient =
       case params["id"] do
         nil -> nil
-        id -> Ash.get!(DiabetesV2.Products.Ingredient, id, actor: socket.assigns.current_user)
+        id -> Ash.get!(Ingredient, id, actor: socket.assigns.current_user)
       end
 
     action = if is_nil(ingredient), do: "New", else: "Edit"
@@ -143,7 +165,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   @impl true
   def handle_event("filter_products", %{"product_search" => query}, socket) do
     products =
-      DiabetesV2.Products.Product
+      Product
       |> filter(name: [ilike: "%#{query}%"])
       |> Ash.read!(actor: socket.assigns.current_user)
 
@@ -156,7 +178,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   @impl true
   def handle_event("filter_ingredients", %{"ingredient_search" => query}, socket) do
     ingredients =
-      DiabetesV2.Products.Product
+      Product
       |> filter(name: [ilike: "%#{query}%"])
       |> Ash.read!(actor: socket.assigns.current_user)
 
@@ -188,26 +210,33 @@ defmodule DiabetesV2Web.IngredientLive.Form do
     Enum.map(products, &{&1.name, &1.id})
   end
 
-  defp assign_form(%{assigns: %{ingredient: ingredient}} = socket) do
+  defp assign_form(socket) do
+    ingredient = Map.get(socket.assigns, :ingredient)
+    product_id = Map.get(socket.assigns, :product_id)
+
     form =
       if ingredient do
+        # When editing an existing ingredient
         AshPhoenix.Form.for_update(ingredient, :update,
           as: "ingredient",
+          domain: DiabetesV2.Products,
           actor: socket.assigns.current_user
         )
       else
-        changes = %{}
+        # When creating a new ingredient
+        base_form =
+          AshPhoenix.Form.for_create(Ingredient, :create,
+            as: "ingredient",
+            domain: DiabetesV2.Products,
+            actor: socket.assigns.current_user
+          )
 
-        changes =
-          if socket.assigns.product_id,
-            do: Map.put(changes, :product_id, socket.assigns.product_id),
-            else: changes
-
-        AshPhoenix.Form.for_create(DiabetesV2.Products.Ingredient, :create,
-          as: "ingredient",
-          actor: socket.assigns.current_user,
-          change: changes
-        )
+        # Pre-fill product_id if we're adding an ingredient for a known product
+        if product_id do
+          AshPhoenix.Form.validate(base_form, %{"product_id" => product_id})
+        else
+          base_form
+        end
       end
 
     assign(socket, form: to_form(form))
@@ -216,11 +245,8 @@ defmodule DiabetesV2Web.IngredientLive.Form do
   defp product_name_from_id(nil), do: ""
 
   defp product_name_from_id(id) do
-    product = Ash.get!(DiabetesV2.Products.Product, id, actor: nil)
+    product = Ash.get!(Product, id, actor: nil)
     product.name
-    # case Ash.get(DiabetesV2.Products.Product, id, actor: nil) do
-    #   product -> product.name
-    # end
   end
 
   defp return_path("index", _ingredient), do: ~p"/ingredients"
