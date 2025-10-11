@@ -57,7 +57,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
               </div>
             <% else %>
               <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
-                <span class="text-sm text-zinc-600 dark:text-zinc-400">Adding Ingredient for:</span>
+                <span class="text-sm text-zinc-600 dark:text-zinc-400">Product:</span>
                 <span class="ml-2 font-semibold">{product_name_from_id(@product_id)}</span>
               </div>
             <% end %>
@@ -90,7 +90,7 @@ defmodule DiabetesV2Web.IngredientLive.Form do
               </div>
             <% else %>
               <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded">
-                <span class="text-sm text-zinc-600 dark:text-zinc-400">Selected Ingredient:</span>
+                <span class="text-sm text-zinc-600 dark:text-zinc-400">Ingredient:</span>
                 <span class="ml-2 font-semibold">{product_name_from_id(@ingredient_product_id)}</span>
               </div>
             <% end %>
@@ -133,12 +133,18 @@ defmodule DiabetesV2Web.IngredientLive.Form do
     action = if is_nil(ingredient), do: "New", else: "Edit"
     page_title = action <> " " <> "Ingredient"
 
+    # Pre-fill product_id from ingredient if editing
+    product_id = product_id || (ingredient && ingredient.product_id)
+
+    # Pre-fill ingredient_product_id if editing
+    ingredient_product_id = ingredient && ingredient.ingredient_product_id
+
     {:ok,
      socket
      |> assign(:return_to, return_to(params["return_to"]))
      |> assign(ingredient: ingredient)
      |> assign(:product_id, product_id)
-     |> assign(:ingredient_product_id, nil)
+     |> assign(:ingredient_product_id, ingredient_product_id)
      |> assign(:page_title, page_title)
      |> assign(:product_search, "")
      |> assign(:ingredient_search, "")

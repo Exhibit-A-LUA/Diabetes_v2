@@ -36,15 +36,38 @@ defmodule DiabetesV2Web.IngredientLive.Index do
 
             <div class="space-y-2">
               <%= for ingredient <- ingredients do %>
-                <div class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 rounded">
+                <div class={[
+                  "relative flex items-center justify-between p-3 rounded-lg border transition",
+                  ingredient.is_included &&
+                    "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+                  !ingredient.is_included &&
+                    "bg-zinc-100 dark:bg-zinc-900/50 border-zinc-300 dark:border-zinc-700 opacity-80 scale-[0.95]"
+                ]}>
+                  <!-- Left-corner EXCLUDED ribbon -->
+                  <%= if !ingredient.is_included do %>
+                    <div class="absolute top-0 left-0 overflow-hidden w-20 h-20 pointer-events-none">
+                      <div class="absolute transform -rotate-45 bg-gradient-to-r from-red-600 to-red-400 text-white text-[10px] font-semibold text-center shadow-md py-[1px] px-0 w-32 -left-10 top-3">
+                        EXCLUDED
+                      </div>
+                    </div>
+                  <% end %>
+
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      Ingredient Product ID: {ingredient.ingredient_product_id}
+                    <span class={[
+                      "text-sm font-medium",
+                      (ingredient.is_included &&
+                         "text-zinc-900 dark:text-zinc-100") ||
+                        "text-zinc-500 dark:text-zinc-400 line-through"
+                    ]}>
+                      Ingredient: {(ingredient.ingredient_product &&
+                                      ingredient.ingredient_product.name) || "—"}
                     </span>
                     <span class="text-sm text-zinc-600 dark:text-zinc-400">
-                      Grams: {ingredient.grams}, Description: {ingredient.weight_description || "-"}, Included: {ingredient.is_included}
+                      Grams: {ingredient.grams} ({ingredient.weight_description || "-"}),
+                      Options: {ingredient.options || "-"}
                     </span>
                   </div>
+
                   <div class="flex gap-2">
                     <.link
                       navigate={~p"/ingredients/#{ingredient.id}/edit"}
@@ -96,7 +119,7 @@ defmodule DiabetesV2Web.IngredientLive.Index do
     # Load all ingredients with their products
     ingredients =
       Ash.read!(Ingredient,
-        load: [:product],
+        load: [:product, :ingredient_product],
         actor: socket.assigns.current_user
       )
 
