@@ -9,13 +9,36 @@ defmodule DiabetesV2Web.IngredientLive.Index do
     <Layouts.app flash={@flash}>
       <.header>
         Ingredients
-        <:subtitle>Products and their ingredient compositions</:subtitle>
+        <:subtitle>Products with Ingredient</:subtitle>
         <:actions>
           <.button variant="primary" navigate={~p"/ingredients/new"}>
             <.icon name="hero-plus" /> New Ingredient
           </.button>
         </:actions>
       </.header>
+
+      <div class="mb-4 flex items-center">
+        <.form for={@search_form} phx-change="search">
+          <input
+            type="text"
+            name="query"
+            value={@search_query}
+            placeholder="Search products with ingredients..."
+            phx-debounce="300"
+            class="border rounded px-3 py-1 mr-2 w-64"
+          />
+        </.form>
+
+        <.button
+          variant="primary"
+          phx-click="clear_search"
+          disabled={@search_query == ""}
+        >
+          Clear
+        </.button>
+
+        <div :if={@loading} class="ml-2">...</div>
+      </div>
 
       <div class="mt-8 space-y-6">
         <%= for {product, ingredients} <- @products_with_ingredients do %>
@@ -99,6 +122,9 @@ defmodule DiabetesV2Web.IngredientLive.Index do
      socket
      |> assign(:page_title, "Ingredients")
      |> assign_new(:current_user, fn -> nil end)
+     |> assign(:search_query, "")
+     |> assign(:search_form, to_form(%{}))
+     |> assign(:loading, false)
      |> load_products_with_ingredients()}
   end
 
@@ -115,15 +141,37 @@ defmodule DiabetesV2Web.IngredientLive.Index do
      |> load_products_with_ingredients()}
   end
 
-  defp load_products_with_ingredients(socket) do
-    # Load all ingredients with their products
+  @impl true
+  def handle_event("search", %{"query" => query}, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, query)
+     |> load_products_with_ingredients(query)}
+  end
+
+  @impl true
+  def handle_event("clear_search", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, "")
+     |> load_products_with_ingredients("")}
+  end
+
+  defp load_products_with_ingredients(socket, query \\ "") do
     ingredients =
       Ash.read!(Ingredient,
         load: [:product, :ingredient_product],
         actor: socket.assigns.current_user
       )
+      |> Enum.filter(fn ingredient ->
+        if query == "" do
+          true
+        else
+          product_name = ingredient.product.name
+          String.contains?(String.downcase(product_name), String.downcase(query))
+        end
+      end)
 
-    # Group by product
     products_with_ingredients =
       ingredients
       |> Enum.group_by(& &1.product)
